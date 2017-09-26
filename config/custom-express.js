@@ -1,10 +1,11 @@
 var express = require('express');
 var consign = require('consign');
 var bodyParser = require('body-parser');
+
 //criando aplicacao express
 module.exports = function(){
-    var app = express();
 
+    var app = express();
     app.use(bodyParser.urlencoded({extended:true}));
     app.use(bodyParser.json());
 
@@ -13,4 +14,5 @@ module.exports = function(){
         .into(app);
 
     return app;
+
 };

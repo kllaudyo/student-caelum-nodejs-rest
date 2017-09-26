@@ -9,7 +9,14 @@ module.exports = function(app){
     });
 
     app.post('/pagamentos/pagamento',function(request, response){
-        Log.d(request.body);
-        response.send('ok\n');
+
+        var pagamento = request.body;
+
+        Log.d('Processando uma requisicao de um novo pagamento');
+
+        pagamento.status = "CRIADA";
+        pagamento.data = new Date();
+
+        response.send(pagamento);
     });
 };
