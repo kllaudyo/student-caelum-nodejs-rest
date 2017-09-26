@@ -1,0 +1,18 @@
+{
+  "name": "payfast",
+  "version": "1.0.0",
+  "description": "Projeto estudo alura api rest no node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "pagamento",
+    "api"
+  ],
+  "author": "Claudio Acioli",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.5"
+  }
+}
