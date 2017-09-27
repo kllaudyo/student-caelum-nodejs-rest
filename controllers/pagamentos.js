@@ -10,28 +10,40 @@ module.exports = function(app){
 
     app.post('/pagamentos/pagamento',function(request, response){
 
-        var pagamento = request.body;
+        Log.d('Recebendo requisicao de pagamento');
 
-        Log.d('Processando uma requisicao de um novo pagamento');
+        request.assert('forma_de_pagamento', 'Forma de pagamento é obrigatório').notEmpty();
+        request.assert('valor','O valor e obrigatorio e deve ser um decimal').notEmpty().isFloat();
 
-        pagamento.status = "CRIADA";
-        pagamento.data = new Date();
+        //aconteceu algum erro?
+        var erros = request.validationErrors();
+        if(erros){
 
-        var connection = app.persistencia.connectionFactory();
-        var pagamentoDAO = new app.persistencia.PagamentoDAO(connection);
-        pagamentoDAO.save(pagamento, function(err, result){
+            Log.d("Erro de validação");
+            response.status(400);
+            response.json(erros);
 
-            if(err){
-                Log.e(err);
-                response.send("erro");
-                return;
-            }
+        }else {
 
-            Log.d("salvo com sucesso");
-            response.json(pagamento);
+            var pagamento = request.body;
+            pagamento.status = "CRIADA";
+            pagamento.data = new Date();
 
-        });
+            var connection = app.persistencia.connectionFactory();
+            var pagamentoDAO = new app.persistencia.PagamentoDAO(connection);
+            pagamentoDAO.save(pagamento, function (err, result) {
 
-        // response.send(pagamento);
+                if (err) {
+                    Log.e(err);
+                    response.status(400);
+                    response.send(err);
+                    return;
+                }
+
+                Log.d("salvo com sucesso");
+                response.json(pagamento);
+
+            });
+        }
     });
 };
