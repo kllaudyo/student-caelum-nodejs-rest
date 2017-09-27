@@ -45,6 +45,8 @@ module.exports = function(app){
                 response.location('/pagamentos/pagamento/' + pagamento.id_pagamento);
 
                 //descrevendo as proximas ações
+                //HATEOAS
+                //Hypermedia As The Engine of Application State
                 var hateoas = {
                     pagamento: pagamento,
                     links: [
