@@ -35,12 +35,14 @@ module.exports = function(app){
 
                 if (err) {
                     Log.e(err);
-                    response.status(400);
+                    response.status(500);
                     response.send(err);
                     return;
                 }
 
                 Log.d("salvo com sucesso");
+                response.status(201);
+                response.location('/pagamentos/pagamento/' + result.insertId);
                 response.json(pagamento);
 
             });
