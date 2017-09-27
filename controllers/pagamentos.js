@@ -10,8 +10,6 @@ module.exports = function(app){
 
     app.post('/pagamentos/pagamento',function(request, response){
 
-        Log.d('Recebendo requisicao de pagamento');
-
         request.assert('forma_de_pagamento', 'Forma de pagamento é obrigatório').notEmpty();
         request.assert('valor','O valor e obrigatorio e deve ser um decimal').notEmpty().isFloat();
         request.assert('moeda','Moeda é obrigatória e deve ter 3 caracteres').notEmpty().len(3,3);
@@ -32,7 +30,7 @@ module.exports = function(app){
 
             var connection = app.persistencia.connectionFactory();
             var pagamentoDAO = new app.persistencia.PagamentoDAO(connection);
-            pagamentoDAO.save(pagamento, function (err, result) {
+            pagamentoDAO.insert(pagamento, function (err, result) {
 
                 if (err) {
                     Log.e(err);
@@ -48,5 +46,82 @@ module.exports = function(app){
 
             });
         }
+    });
+
+    app.put('/pagamentos/pagamento/:id', function(request, response){
+
+        var id = request.params.id;
+
+        var connection = app.persistencia.connectionFactory();
+        var pagamentoDAO = new app.persistencia.PagamentoDAO(connection);
+
+        pagamentoDAO.findById(id, function(err, result){
+
+            if(err || result.length === 0){
+                response.status(400);
+                response.json({'id':id,'message':'recurso não existe'});
+                console.error(err);
+                return;
+            }
+
+            var pagamento = result[0];
+
+            pagamento.status = 'CONFIRMADO';
+            pagamento.data = new Date();
+
+
+            pagamentoDAO.update(pagamento, function (err) {
+
+                if(err){
+                    response.status(500);
+                    response.json({'id':id,'error':err});
+                    console.error(err);
+                    return;
+                }
+
+                response.status(200);
+                response.json(pagamento);
+
+            });
+
+
+        });
+
+    });
+
+    app.delete('/pagamentos/pagamento/:id',function(request, response){
+
+        var id = request.params.id;
+        var connection = app.persistencia.connectionFactory();
+        var pagamentoDAO = new app.persistencia.PagamentoDAO(connection);
+
+        pagamentoDAO.findById(id, function (err, result) {
+            if(err || result.length === 0){
+                response.status(400);
+                response.json({'id':id,'message':'recurso não existe'});
+                console.error(err);
+                return;
+            }
+
+            var pagamento = result[0];
+            pagamento.status = 'CANCELADO';
+            pagamento.data = new Date();
+
+
+            pagamentoDAO.update(pagamento, function(err){
+                if(err){
+                    response.status(500);
+                    response.json({'id':id,'error':err});
+                    console.error(err);
+                    return;
+                }
+
+                response.status(204); //atualizado, mas não existe mais
+                response.json(pagamento);
+
+            });
+
+        });
+
     });
 };

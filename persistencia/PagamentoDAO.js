@@ -3,16 +3,20 @@ function PagamentoDAO(connection){
     this._connection = connection;
 }
 
-PagamentoDAO.prototype.save = function(pagamento, callback){
+PagamentoDAO.prototype.insert = function(pagamento, callback){
     this._connection.query('INSERT INTO pagamento SET ?', pagamento, callback);
 };
 
+PagamentoDAO.prototype.update = function(pagamento, callback){
+    this._connection.query('UPDATE pagamento SET status = ?, data = ? where id_pagamento = ?', [pagamento.status, pagamento.data, pagamento.id_pagamento], callback);
+};
+
 PagamentoDAO.prototype.findAll = function(callback){
-    this._connection.query('SELECT * FROM PAGAMENTOS', callback);
+    this._connection.query('SELECT * FROM pagamento', callback);
 };
 
 PagamentoDAO.prototype.findById = function (id, callback){
-    this._connection.query('SELECT * FROM PAGAMENTOS WHERE ID_PAGAMENTO = ?', [id], callback);
+    this._connection.query('SELECT * FROM pagamento WHERE id_pagamento = ?', [id], callback);
 };
 
 module.exports = function () {
