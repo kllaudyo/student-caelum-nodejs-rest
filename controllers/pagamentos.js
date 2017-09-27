@@ -39,10 +39,30 @@ module.exports = function(app){
                     return;
                 }
 
-                Log.d("salvo com sucesso");
+                pagamento.id_pagamento = result.insertId;
+
                 response.status(201);
-                response.location('/pagamentos/pagamento/' + result.insertId);
-                response.json(pagamento);
+                response.location('/pagamentos/pagamento/' + pagamento.id_pagamento);
+
+                //descrevendo as proximas ações
+                var hateoas = {
+                    pagamento: pagamento,
+                    links: [
+                        {
+                            rel:"CONFIRMAR",
+                            method:"PUT",
+                            href:'http://localhost:3000/pagamentos/pagamento/' + pagamento.id_pagamento
+                        },
+                        {
+                            rel:"CANCELAR",
+                            method:"DELETE",
+                            href:'http://localhost:3000/pagamentos/pagamento/' + pagamento.id_pagamento
+                        }
+
+                    ]
+                };
+
+                response.json(hateoas);
 
             });
         }
