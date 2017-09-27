@@ -17,6 +17,21 @@ module.exports = function(app){
         pagamento.status = "CRIADA";
         pagamento.data = new Date();
 
-        response.send(pagamento);
+        var connection = app.persistencia.connectionFactory();
+        var pagamentoDAO = new app.persistencia.PagamentoDAO(connection);
+        pagamentoDAO.save(pagamento, function(err, result){
+
+            if(err){
+                Log.e(err);
+                response.send("erro");
+                return;
+            }
+
+            Log.d("salvo com sucesso");
+            response.json(pagamento);
+
+        });
+
+        // response.send(pagamento);
     });
 };
