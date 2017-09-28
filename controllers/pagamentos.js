@@ -44,42 +44,50 @@ module.exports = function(app){
                 var clienteCartoes = new app.servicos.clienteCartoes();
 
                 if(pagamento.forma_de_pagamento === 'cartao'){
+
                     var cartao = request.body['cartao'];
-                    clienteCartoes.autorizar(cartao, function(result){
-                        console.log('verificando retorno');
-                        console.log(result.status);
+                    clienteCartoes.autorizar(cartao, function(err, result){
+
+                        if(err){
+                            Log.e(err);
+                            response.status(500);
+                            response.send(err);
+                            return;
+                        }
+
                         if(result.status==='AUTORIZADO'){
                             console.log('autorizado pela operadora do cartao');
                         }
                     });
                     response.status(201).json(cartao);
-                    return;
+
+                }else {
+
+                    response.status(201);
+                    response.location('/pagamentos/pagamento/' + pagamento.id_pagamento);
+
+                    //descrevendo as proximas ações
+                    //HATEOAS
+                    //Hypermedia As The Engine of Application State
+                    var hateoas = {
+                        pagamento: pagamento,
+                        links: [
+                            {
+                                rel: "CONFIRMAR",
+                                method: "PUT",
+                                href: 'http://localhost:3000/pagamentos/pagamento/' + pagamento.id_pagamento
+                            },
+                            {
+                                rel: "CANCELAR",
+                                method: "DELETE",
+                                href: 'http://localhost:3000/pagamentos/pagamento/' + pagamento.id_pagamento
+                            }
+
+                        ]
+                    };
+
+                    response.json(hateoas);
                 }
-
-                response.status(201);
-                response.location('/pagamentos/pagamento/' + pagamento.id_pagamento);
-
-                //descrevendo as proximas ações
-                //HATEOAS
-                //Hypermedia As The Engine of Application State
-                var hateoas = {
-                    pagamento: pagamento,
-                    links: [
-                        {
-                            rel:"CONFIRMAR",
-                            method:"PUT",
-                            href:'http://localhost:3000/pagamentos/pagamento/' + pagamento.id_pagamento
-                        },
-                        {
-                            rel:"CANCELAR",
-                            method:"DELETE",
-                            href:'http://localhost:3000/pagamentos/pagamento/' + pagamento.id_pagamento
-                        }
-
-                    ]
-                };
-
-                response.json(hateoas);
 
             });
         }
