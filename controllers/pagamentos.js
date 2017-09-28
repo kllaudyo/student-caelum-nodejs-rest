@@ -10,9 +10,9 @@ module.exports = function(app){
 
     app.post('/pagamentos/pagamento',function(request, response){
 
-        request.assert('forma_de_pagamento', 'Forma de pagamento é obrigatório').notEmpty();
-        request.assert('valor','O valor e obrigatorio e deve ser um decimal').notEmpty().isFloat();
-        request.assert('moeda','Moeda é obrigatória e deve ter 3 caracteres').notEmpty().len(3,3);
+        request.assert('pagamento.forma_de_pagamento', 'Forma de pagamento é obrigatório').notEmpty();
+        request.assert('pagamento.valor','O valor e obrigatorio e deve ser um decimal').notEmpty().isFloat();
+        request.assert('pagamento.moeda','Moeda é obrigatória e deve ter 3 caracteres').notEmpty().len(3,3);
 
         //aconteceu algum erro?
         var erros = request.validationErrors();
@@ -24,7 +24,7 @@ module.exports = function(app){
 
         }else {
 
-            var pagamento = request.body;
+            var pagamento = request.body["pagamento"];
             pagamento.status = "CRIADA";
             pagamento.data = new Date();
 
@@ -40,6 +40,21 @@ module.exports = function(app){
                 }
 
                 pagamento.id_pagamento = result.insertId;
+
+                var clienteCartoes = new app.servicos.clienteCartoes();
+
+                if(pagamento.forma_de_pagamento === 'cartao'){
+                    var cartao = request.body['cartao'];
+                    clienteCartoes.autorizar(cartao, function(result){
+                        console.log('verificando retorno');
+                        console.log(result.status);
+                        if(result.status==='AUTORIZADO'){
+                            console.log('autorizado pela operadora do cartao');
+                        }
+                    });
+                    response.status(201).json(cartao);
+                    return;
+                }
 
                 response.status(201);
                 response.location('/pagamentos/pagamento/' + pagamento.id_pagamento);
@@ -146,4 +161,5 @@ module.exports = function(app){
         });
 
     });
+
 };
