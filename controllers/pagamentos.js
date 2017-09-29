@@ -50,16 +50,38 @@ module.exports = function(app){
 
                         if(err){
                             Log.e(err);
-                            response.status(500);
+                            response.status(400);
                             response.send(err);
                             return;
                         }
 
                         if(result.status==='AUTORIZADO'){
-                            console.log('autorizado pela operadora do cartao');
+                            response.status(201);
+                            response.location('/pagamentos/pagamento/' + pagamento.id_pagamento);
+
+                            //descrevendo as proximas ações
+                            //HATEOAS
+                            //Hypermedia As The Engine of Application State
+                            var hateoas = {
+                                pagamento: pagamento,
+                                links: [
+                                    {
+                                        rel: "CONFIRMAR",
+                                        method: "PUT",
+                                        href: 'http://localhost:3000/pagamentos/pagamento/' + pagamento.id_pagamento
+                                    },
+                                    {
+                                        rel: "CANCELAR",
+                                        method: "DELETE",
+                                        href: 'http://localhost:3000/pagamentos/pagamento/' + pagamento.id_pagamento
+                                    }
+
+                                ]
+                            };
+
+                            response.json(hateoas);
                         }
                     });
-                    response.status(201).json(cartao);
 
                 }else {
 
