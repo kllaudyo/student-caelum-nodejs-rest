@@ -4,8 +4,40 @@ var Log = require('../Log');
 module.exports = function(app){
 
     app.get('/pagamentos',function(request, response) {
-        Log.d('recebendo requisicao para /pagamentos');
-        response.end('OK');
+
+        var connection = app.persistencia.connectionFactory();
+        var dao = new app.persistencia.PagamentoDAO(connection);
+
+        dao.findAll(function (err, result) {
+            if(err){
+                response.status(400);
+                response.json({'error':err});
+                console.log(err);
+            }else{
+                response.status(200).json(result);
+            }
+        });
+
+    });
+
+    app.get('/pagamentos/pagamento/:id', function (request, response) {
+
+        var id = request.params.id;
+        var connection = app.persistencia.connectionFactory();
+        var dao = new app.persistencia.PagamentoDAO(connection);
+
+        dao.findById(id, function(err, result){
+            if(err || result.length === 0){
+                response.status(400);
+                response.json({'id':id,'message':'recurso não existe'});
+                console.log(err);
+            }else {
+                var pagamento = result[0];
+                response.status(200);
+                response.json(pagamento);
+            }
+        })
+
     });
 
     app.post('/pagamentos/pagamento',function(request, response){
