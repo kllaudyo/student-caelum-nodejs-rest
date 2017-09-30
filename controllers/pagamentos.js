@@ -40,7 +40,6 @@ module.exports = function(app){
                         response.json({'id':id,'message':'recurso não existe'});
                         console.log(err);
                     }else {
-                        logger.info('encontrou no banco de dados');
                         var pagamento = result[0];
                         response.status(200);
                         response.json(pagamento);
@@ -48,7 +47,6 @@ module.exports = function(app){
                 })
             }else{
                 //encontrou - HIT
-                logger.info('encontrou via memcached');
                 response.status(200);
                 response.json(pagamentoJson)
             }
