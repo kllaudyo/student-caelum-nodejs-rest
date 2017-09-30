@@ -39,7 +39,7 @@ module.exports = function(app){
                         response.json({'id':id,'message':'recurso não existe'});
                         console.log(err);
                     }else {
-                        console.log('encontrou no banco de dados')
+                        console.log('encontrou no banco de dados');
                         var pagamento = result[0];
                         response.status(200);
                         response.json(pagamento);
@@ -178,6 +178,7 @@ module.exports = function(app){
     app.put('/pagamentos/pagamento/:id', function(request, response){
 
         var id = request.params.id;
+        var memcached = app.servicos.memcachedClient();
 
         var connection = app.persistencia.connectionFactory();
         var pagamentoDAO = new app.persistencia.PagamentoDAO(connection);
@@ -206,6 +207,16 @@ module.exports = function(app){
                     return;
                 }
 
+                memcached.replace('pagamento-' + id, pagamento, 120000, function(err){
+                    if(err){
+                        memcached.set('pagamento-' + id, pagamento, 120000, function(err){
+                            console.log('adicionado no memcached');
+                        });
+                    }else {
+                        console.log('atualizado no memcached');
+                    }
+                });
+
                 response.status(200);
                 response.json(pagamento);
 
@@ -219,6 +230,8 @@ module.exports = function(app){
     app.delete('/pagamentos/pagamento/:id',function(request, response){
 
         var id = request.params.id;
+        var memcached = app.servicos.memcachedClient();
+
         var connection = app.persistencia.connectionFactory();
         var pagamentoDAO = new app.persistencia.PagamentoDAO(connection);
 
@@ -242,6 +255,10 @@ module.exports = function(app){
                     console.error(err);
                     return;
                 }
+
+                memcached.del('pagamento-' + id, pagamento, 120000, function(err){
+                    console.log('adicionado no memcached');
+                });
 
                 response.status(204); //atualizado, mas não existe mais
                 response.json(pagamento);
