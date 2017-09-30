@@ -21,6 +21,7 @@
     "mysql": "^2.14.1",
     "restify": "^6.0.1",
     "restify-clients": "^1.5.2",
-    "soap": "^0.21.0"
+    "soap": "^0.21.0",
+    "winston": "^2.3.1"
   }
 }
