@@ -23,20 +23,37 @@ module.exports = function(app){
     app.get('/pagamentos/pagamento/:id', function (request, response) {
 
         var id = request.params.id;
-        var connection = app.persistencia.connectionFactory();
-        var dao = new app.persistencia.PagamentoDAO(connection);
 
-        dao.findById(id, function(err, result){
-            if(err || result.length === 0){
-                response.status(400);
-                response.json({'id':id,'message':'recurso não existe'});
-                console.log(err);
-            }else {
-                var pagamento = result[0];
+        var memcached = app.servicos.memcachedClient();
+
+        memcached.get('pagamento-' + id, function (err, pagamentoJson) {
+            if(err || !pagamentoJson){
+
+                //não encontrou - MISS
+                var connection = app.persistencia.connectionFactory();
+                var dao = new app.persistencia.PagamentoDAO(connection);
+
+                dao.findById(id, function(err, result){
+                    if(err || result.length === 0){
+                        response.status(400);
+                        response.json({'id':id,'message':'recurso não existe'});
+                        console.log(err);
+                    }else {
+                        console.log('encontrou no banco de dados')
+                        var pagamento = result[0];
+                        response.status(200);
+                        response.json(pagamento);
+                    }
+                })
+            }else{
+                //encontrou - HIT
+                console.log('encontrado via memcached');
                 response.status(200);
-                response.json(pagamento);
+                response.json(pagamentoJson)
             }
-        })
+        });
+
+
 
     });
 
@@ -70,6 +87,8 @@ module.exports = function(app){
                     response.send(err);
                     return;
                 }
+
+                var memcached = app.servicos.memcachedClient();
 
                 pagamento.id_pagamento = result.insertId;
 
@@ -111,6 +130,10 @@ module.exports = function(app){
                                 ]
                             };
 
+                            //adicionando json criado no memcached
+                            memcached.set('pagamento-' + pagamento.id_pagamento, pagamento, 120000, function(err){
+                                console.log('adicionado no memcached');
+                            });
                             response.json(hateoas);
                         }
                     });
@@ -119,6 +142,11 @@ module.exports = function(app){
 
                     response.status(201);
                     response.location('/pagamentos/pagamento/' + pagamento.id_pagamento);
+
+                    //adicionando json criado no memcached
+                    memcached.set('pagamento-' + pagamento.id_pagamento, pagamento, 120000, function(err){
+                        console.log('adicionado no memcached');
+                    });
 
                     //descrevendo as proximas ações
                     //HATEOAS
