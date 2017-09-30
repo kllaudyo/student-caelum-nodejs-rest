@@ -6,7 +6,7 @@ var client = function(){
         retry: 10000, //tempo em milisegundos em falha de um servidor
         remove: true // autorizando o memcached a remover do pull nó não encontrado
     });
-}
+};
 
 module.exports = function () {
     return client;
